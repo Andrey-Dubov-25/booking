@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>ИИ-ассистент бронирования</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 2rem; }
+    .answer-box { background: #f8f9fa; padding: 1rem; border-radius: 0.5rem; margin-top: 1.5rem; min-height: 60px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="mb-4">ИИ-ассистент бронирования</h2>
+
+  <div class="card p-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <strong>Статус паспорта:</strong>
+      <span id="status-text" class="badge bg-danger">не получен</span>
+      <button onclick="toggle()" class="btn btn-sm btn-outline-secondary">Переключить</button>
+    </div>
+  </div>
+
+  <div class="card p-3">
+    <label for="msg" class="form-label fw-bold">Сообщение</label>
+    <textarea id="msg" class="form-control" rows="3" placeholder="Например: Как мне заселиться?"></textarea>
+
+    <button onclick="ask()" class="btn btn-primary mt-3 w-100">Получить ответ ИИ</button>
+
+    <div class="answer-box">
+      <h5 class="fw-bold">Ответ ассистента:</h5>
+      <p id="answer-text" class="mb-0"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+let received = false;
+
+function toggle() {
+  received = !received;
+  const el = document.getElementById('status-text');
+  el.textContent = received ? 'получен' : 'не получен';
+  el.className = 'badge ' + (received ? 'bg-success' : 'bg-danger');
+}
+
+async function ask() {
+  const message = document.getElementById('msg').value.trim();
+  if (!message) {
+    alert('Введите сообщение');
+    return;
+  }
+  const res = await fetch('/api/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, passport_received: received })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    alert(err.detail || 'Ошибка: сервер отклонил запрос');
+    return;
+  }
+  const data = await res.json();
+  document.getElementById('answer-text').textContent = data.reply;
+}
+</script>
+
+</body>
+</html>
